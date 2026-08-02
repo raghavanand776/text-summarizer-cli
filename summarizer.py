@@ -3,6 +3,7 @@ import sys
 from pathlib import Path
 
 from anthropic import Anthropic
+from anthropic import APIConnectionError, APIError, APIStatusError, RateLimitError
 from dotenv import load_dotenv
 
 
@@ -34,20 +35,24 @@ for proxy_var in (
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
-response = client.messages.create(
-    model="claude-haiku-4-5-20251001",
-    max_tokens=200,
-    temperature=0.2,
-    messages=[
-        {
-            "role": "user",
-            "content": (
-                "Summarize this text in 2-3 sentences maximum, "
-                "focused on the single most important point.\n\n"
-                f"{text}"
-            ),
-        }
-    ],
-)
-
-print(response.content[0].text)
+try:
+    response = client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=200,
+        temperature=0.2,
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    "Summarize this text in 2-3 sentences maximum, "
+                    "focused on the single most important point.\n\n"
+                    f"{text}"
+                ),
+            }
+        ],
+    )
+    print(response.content[0].text)
+except (APIConnectionError, APIError, APIStatusError, RateLimitError) as exc:
+    print("Sorry, I couldn't complete the summary request right now.")
+    print(f"Anthropic API error: {exc}")
+    print("Please check your API key, your network connection, or try again later.")
