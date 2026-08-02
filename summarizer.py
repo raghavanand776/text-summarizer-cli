@@ -35,6 +35,17 @@ for proxy_var in (
 
 client = Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
 
+word_count = len(text.split())
+estimated_input_tokens = word_count * 1.3
+estimated_input_cost = estimated_input_tokens / 1_000_000 * 1
+estimated_output_cost = 200 / 1_000_000 * 5
+estimated_total_cost = estimated_input_cost + estimated_output_cost
+
+print(
+    f"Estimated cost: ${estimated_total_cost:.6f} "
+    f"(approx. {estimated_input_tokens:.0f} input tokens, 200 output tokens)"
+)
+
 try:
     response = client.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -52,6 +63,15 @@ try:
         ],
     )
     print(response.content[0].text)
+    input_tokens = response.usage.input_tokens
+    output_tokens = response.usage.output_tokens
+    actual_input_cost = input_tokens / 1_000_000 * 1
+    actual_output_cost = output_tokens / 1_000_000 * 5
+    actual_total_cost = actual_input_cost + actual_output_cost
+
+    print(f"Actual input tokens: {input_tokens}")
+    print(f"Actual output tokens: {output_tokens}")
+    print(f"Actual cost: ${actual_total_cost:.6f}")
 except (APIConnectionError, APIError, APIStatusError, RateLimitError) as exc:
     print("Sorry, I couldn't complete the summary request right now.")
     print(f"Anthropic API error: {exc}")
